@@ -1,0 +1,230 @@
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #ece5dd; overflow: hidden; }
+
+.hidden { display: none !important; }
+
+/* ─────────────────────── LOGIN ─────────────────────── */
+#login-overlay {
+  position: fixed; inset: 0; z-index: 999;
+  background: rgba(0,0,0,.6);
+  display: flex; align-items: center; justify-content: center;
+}
+#login-box {
+  background: #fff; border-radius: 16px; padding: 40px 36px;
+  width: 320px; text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,.3);
+}
+.login-logo { font-size: 3rem; margin-bottom: 8px; }
+#login-box h2 { color: #075e54; font-size: 1.5rem; margin-bottom: 6px; }
+#login-box p  { color: #888; font-size: .85rem; margin-bottom: 20px; }
+#login-name {
+  width: 100%; padding: 12px 14px; border: 1.5px solid #ddd;
+  border-radius: 10px; font-size: 1rem; outline: none; transition: border .2s;
+  margin-bottom: 14px;
+}
+#login-name:focus { border-color: #128c7e; }
+#login-btn {
+  width: 100%; padding: 13px; background: #128c7e; color: #fff;
+  border: none; border-radius: 10px; font-size: 1rem; font-weight: 600;
+  cursor: pointer; transition: background .2s;
+}
+#login-btn:hover { background: #075e54; }
+
+/* ─────────────────────── TOAST ─────────────────────── */
+#toast {
+  position: fixed; top: 16px; right: 16px; z-index: 1000;
+  background: #075e54; color: #fff; padding: 12px 18px;
+  border-radius: 10px; font-size: .9rem; max-width: 280px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.25);
+  transform: translateY(-90px); transition: transform .3s ease;
+  pointer-events: none;
+}
+#toast.show { transform: translateY(0); }
+
+/* ─────────────────────── APP SHELL ─────────────────────── */
+#app { display: flex; height: 100vh; }
+
+/* ─────────────────────── SIDEBAR ─────────────────────── */
+#sidebar {
+  width: 290px; background: #fff; border-right: 1px solid #ddd;
+  display: flex; flex-direction: column; flex-shrink: 0;
+}
+#sidebar-header {
+  background: #075e54; color: #fff; padding: 14px 16px;
+  font-size: 1rem; font-weight: 600;
+}
+#search-wrap { padding: 8px 12px; background: #f6f6f6; border-bottom: 1px solid #eee; }
+#room-search {
+  width: 100%; padding: 8px 12px; border: none; border-radius: 20px;
+  background: #fff; font-size: .88rem; outline: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,.1);
+}
+#rooms-list { flex: 1; overflow-y: auto; }
+.room-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  cursor: pointer; border-bottom: 1px solid #f0f0f0; transition: background .15s;
+}
+.room-item:hover   { background: #f5f5f5; }
+.room-item.active  { background: #e8f4f2; border-left: 4px solid #128c7e; }
+.room-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; flex-shrink: 0;
+}
+.room-info   { flex: 1; min-width: 0; }
+.room-name   { font-weight: 600; font-size: .93rem; color: #222; }
+.room-preview{ font-size: .78rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.room-badge  {
+  background: #25d366; color: #fff; border-radius: 50%;
+  width: 20px; height: 20px; font-size: .68rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+/* ─────────────────────── CHAT PANEL ─────────────────────── */
+#chat-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+
+#no-room {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; color: #bbb; gap: 10px;
+}
+#no-room span { font-size: 3.5rem; }
+#no-room p    { font-size: 1rem; }
+
+/* ── Chat header ── */
+#chat-header {
+  background: #075e54; color: #fff; padding: 12px 18px;
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+}
+#header-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem; background: rgba(255,255,255,.15);
+}
+#header-info h3    { font-size: 1rem; font-weight: 600; }
+#header-info small { font-size: .76rem; opacity: .82; }
+
+/* ── Messages ── */
+#messages {
+  flex: 1; overflow-y: auto; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 5px;
+  background: #ece5dd;
+}
+
+/* message wrappers */
+.msg-wrap       { display: flex; flex-direction: column; max-width: 68%; }
+.msg-wrap.own   { align-self: flex-end; }
+.msg-wrap.other { align-self: flex-start; }
+
+.msg-author { font-size: .72rem; font-weight: 700; color: #075e54; margin-bottom: 2px; padding-left: 4px; }
+
+.bubble {
+  padding: 8px 12px; border-radius: 8px; position: relative;
+  font-size: .92rem; line-height: 1.45; word-break: break-word;
+  box-shadow: 0 1px 2px rgba(0,0,0,.12);
+}
+.msg-wrap.own   .bubble { background: #dcf8c6; border-radius: 8px 0 8px 8px; }
+.msg-wrap.other .bubble { background: #fff; border-radius: 0 8px 8px 8px; }
+
+.bubble .msg-time { display: block; font-size: .65rem; color: #aaa; text-align: right; margin-top: 4px; }
+
+/* image message */
+.bubble img.msg-img {
+  max-width: 240px; max-height: 240px; border-radius: 6px;
+  display: block; cursor: pointer; object-fit: cover;
+}
+
+/* audio message */
+.bubble audio { max-width: 220px; display: block; margin-top: 4px; }
+
+/* system message */
+.msg-system {
+  align-self: center; background: rgba(225,245,254,.9); color: #0277bd;
+  font-size: .78rem; padding: 4px 14px; border-radius: 12px;
+  text-align: center; margin: 4px 0;
+}
+
+/* upload progress */
+.msg-uploading { opacity: .6; font-style: italic; font-size: .82rem; }
+
+/* ─────────────────────── INPUT BAR ─────────────────────── */
+#input-bar {
+  background: #f0f0f0; padding: 8px 12px;
+  display: flex; align-items: flex-end; gap: 8px;
+  position: relative; flex-shrink: 0;
+}
+
+.icon-btn {
+  background: none; border: none; font-size: 1.45rem;
+  cursor: pointer; padding: 6px; border-radius: 50%;
+  transition: background .15s; line-height: 1; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.icon-btn:hover { background: #ddd; }
+
+#msg-input {
+  flex: 1; padding: 10px 14px; border: none; border-radius: 22px;
+  background: #fff; font-size: .93rem; outline: none; resize: none;
+  max-height: 110px; overflow-y: auto; line-height: 1.4;
+  box-shadow: 0 1px 3px rgba(0,0,0,.1); font-family: inherit;
+}
+
+#send-btn {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: #128c7e; color: #fff; border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1.05rem; flex-shrink: 0;
+  transition: background .2s;
+}
+#send-btn:hover { background: #075e54; }
+
+/* ── Emoji picker ── */
+#emoji-picker {
+  position: absolute; bottom: 66px; left: 12px; z-index: 200;
+  background: #fff; border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.18);
+  padding: 12px; display: none; flex-wrap: wrap; gap: 5px; width: 266px;
+}
+#emoji-picker.open { display: flex; }
+.e { font-size: 1.4rem; cursor: pointer; padding: 4px; border-radius: 6px; transition: background .1s; }
+.e:hover { background: #f0f0f0; }
+
+/* ── Recording bar ── */
+#rec-bar {
+  background: #ffebee; border-top: 1px solid #ffcdd2;
+  padding: 10px 16px; display: flex; align-items: center; gap: 10px;
+  font-size: .9rem; color: #c62828; flex-shrink: 0;
+}
+#rec-dot { animation: blink 1s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+#cancel-rec {
+  background: none; border: none; color: #888; cursor: pointer;
+  font-size: .85rem; text-decoration: underline;
+}
+
+/* ── Audio btn recording state ── */
+#audio-btn.recording { background: #ffcdd2 !important; border-radius: 50%; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+
+/* ── Lightbox ── */
+#lightbox {
+  position: fixed; inset: 0; background: rgba(0,0,0,.88); z-index: 2000;
+  display: flex; align-items: center; justify-content: center; cursor: zoom-out;
+}
+#lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
+
+/* ── Upload progress overlay on bubble ── */
+.progress-bar {
+  height: 3px; background: #25d366; border-radius: 2px;
+  width: 0%; transition: width .2s;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  #sidebar { width: 100%; position: absolute; z-index: 100; height: 100%; }
+  #sidebar.room-open { display: none; }
+}

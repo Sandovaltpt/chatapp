@@ -1,0 +1,8 @@
+# ChatApp — WhatsApp Clone
+node_modules/
+data.json
+uploads/
+.env
+dist/
+.DS_Store
+*.log
