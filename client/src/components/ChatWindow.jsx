@@ -30,7 +30,7 @@ function NoRoomSelected() {
     <div className="no-room-selected">
       <div className="no-room-icon">💬</div>
       <h2>Bienvenido a ChatApp</h2>
-      <p>Seleccioná una sala del panel izquierdo para empezar a chatear, o creá una nueva.</p>
+      <p>Selecciona una sala del panel izquierdo para empezar a chatear, o crea una nueva.</p>
     </div>
   );
 }
@@ -152,7 +152,7 @@ export default function ChatWindow({ currentRoom, onlineUserIds, users, allMessa
           <div className="empty-chat">
             <div className="empty-chat-icon">🏠</div>
             <h3>¡Bienvenido a #{currentRoom.name}!</h3>
-            <p>Sé el primero en enviar un mensaje. Podés escribir texto, imágenes o notas de voz.</p>
+            <p>Sé el primero en enviar un mensaje. Puedes escribir texto, imágenes o notas de voz.</p>
           </div>
         )}
 

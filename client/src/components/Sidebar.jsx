@@ -273,7 +273,7 @@ export default function Sidebar({ rooms, users, onlineUserIds, messages, current
                   </div>
                   <div className="member-info">
                     <div className="member-name">
-                      {u.name}{isMe && <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: 12 }}> (vos)</span>}
+                      {u.name}{isMe && <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: 12 }}> (tú)</span>}
                     </div>
                     <div className={`member-status ${isOnline ? 'online-text' : ''}`}>
                       {isOnline ? '● En línea' : lastMsgText}

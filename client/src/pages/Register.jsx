@@ -14,7 +14,7 @@ export default function Register({ onGoLogin }) {
     const { name, email, phone, password, confirm } = form;
 
     if (!name.trim() || !email.trim() || !phone.trim() || !password) {
-      setError('Por favor completá todos los campos');
+      setError('Por favor completa todos los campos');
       return;
     }
     if (password.length < 6) {
@@ -87,7 +87,7 @@ export default function Register({ onGoLogin }) {
             <input
               id="reg-phone"
               type="tel"
-              placeholder="+54 11 1234-5678"
+              placeholder="+569 1234 5678"
               value={form.phone}
               onChange={set('phone')}
               autoComplete="tel"
@@ -111,7 +111,7 @@ export default function Register({ onGoLogin }) {
             <input
               id="reg-confirm"
               type="password"
-              placeholder="Repetí tu contraseña"
+              placeholder="Repite tu contraseña"
               value={form.confirm}
               onChange={set('confirm')}
               autoComplete="new-password"
@@ -129,7 +129,7 @@ export default function Register({ onGoLogin }) {
         </form>
 
         <div className="auth-footer">
-          ¿Ya tenés cuenta?{' '}
+          ¿Ya tienes cuenta?{' '}
           <a onClick={onGoLogin} id="go-login-link">Iniciar sesión</a>
         </div>
       </div>

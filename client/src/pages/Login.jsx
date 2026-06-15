@@ -11,7 +11,7 @@ export default function Login({ onGoRegister }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim() || !password) {
-      setError('Por favor completá todos los campos');
+      setError('Por favor completa todos los campos');
       return;
     }
     setLoading(true);
@@ -77,8 +77,8 @@ export default function Login({ onGoRegister }) {
         </form>
 
         <div className="auth-footer">
-          ¿No tenés cuenta?{' '}
-          <a onClick={onGoRegister} id="go-register-link">Registrate</a>
+          ¿No tienes cuenta?{' '}
+          <a onClick={onGoRegister} id="go-register-link">Regístrate</a>
         </div>
       </div>
     </div>

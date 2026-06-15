@@ -48,7 +48,7 @@ export default function VoiceRecorder({ onRecorded, disabled }) {
       intervalRef.current = setInterval(() => setSeconds(s => s + 1), 1000);
     } catch (err) {
       console.error('Microphone error:', err);
-      alert('No se pudo acceder al micrófono. Por favor, otorgá permiso.');
+      alert('No se pudo acceder al micrófono. Por favor, otorga el permiso desde tu navegador.');
     }
   };
 
