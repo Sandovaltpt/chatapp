@@ -1,7 +1,6 @@
 import React, {
   useState, useEffect, useRef, useCallback
 } from 'react';
-import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext.jsx';
 import MessageBubble, { formatDate } from './MessageBubble.jsx';
 import VoiceRecorder from './VoiceRecorder.jsx';
@@ -25,17 +24,60 @@ function groupMessagesByDate(messages) {
   return groups;
 }
 
-export default function ChatWindow({ users, onlineUserIds, messages, socketRef }) {
-  const { user } = useAuth();
+// "No room selected" placeholder
+function NoRoomSelected() {
+  return (
+    <div className="no-room-selected">
+      <div className="no-room-icon">💬</div>
+      <h2>Bienvenido a ChatApp</h2>
+      <p>Seleccioná una sala del panel izquierdo para empezar a chatear, o creá una nueva.</p>
+    </div>
+  );
+}
+
+export default function ChatWindow({ currentRoom, onlineUserIds, users, allMessages, setAllMessages, socketRef }) {
+  const { user, token, API_BASE } = useAuth();
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
+  const prevRoomRef = useRef(null);
 
-  // Auto-scroll on new messages
+  // Filter messages for current room
+  const roomMessages = currentRoom
+    ? allMessages.filter(m => m.room_id === currentRoom.id)
+    : [];
+
+  // Load messages when switching rooms
+  useEffect(() => {
+    if (!currentRoom || !token) return;
+    if (prevRoomRef.current === currentRoom.id) return;
+    prevRoomRef.current = currentRoom.id;
+
+    // Join socket room
+    socketRef?.current?.emit('join_room', currentRoom.id);
+
+    // Fetch room messages from server
+    fetch(`${API_BASE}/api/messages?room_id=${currentRoom.id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (!Array.isArray(data)) return;
+        // Merge: add fetched messages to allMessages (avoid duplicates)
+        setAllMessages(prev => {
+          const ids = new Set(prev.map(m => m.id));
+          const newMsgs = data.filter(m => !ids.has(m.id));
+          return [...prev, ...newMsgs];
+        });
+      })
+      .catch(console.error);
+  }, [currentRoom?.id, token]);
+
+  // Auto-scroll on new messages in current room
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [roomMessages.length]);
 
   // Auto-resize textarea
   const handleTextChange = (e) => {
@@ -49,19 +91,16 @@ export default function ChatWindow({ users, onlineUserIds, messages, socketRef }
 
   const sendMessage = useCallback((payload) => {
     const socket = socketRef?.current;
-    if (!socket?.connected) {
-      alert('Sin conexión al servidor. Intentá de nuevo.');
-      return;
-    }
+    if (!socket?.connected) { alert('Sin conexión al servidor.'); return; }
+    if (!currentRoom) return;
     setSending(true);
-    socket.emit('send_message', payload, (ack) => {
+    socket.emit('send_message', { ...payload, room_id: currentRoom.id }, (ack) => {
       setSending(false);
       if (ack?.error) console.error('Send error:', ack.error);
     });
-  }, [socketRef]);
+  }, [socketRef, currentRoom]);
 
-  const handleSendText = (e) => {
-    e?.preventDefault();
+  const handleSendText = () => {
     const content = text.trim();
     if (!content || sending) return;
     sendMessage({ type: 'text', content });
@@ -70,16 +109,17 @@ export default function ChatWindow({ users, onlineUserIds, messages, socketRef }
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendText();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendText(); }
   };
 
-  const handleVoiceRecorded = useCallback((payload) => sendMessage(payload), [sendMessage]);
-  const handleImageUploaded = useCallback((payload) => sendMessage(payload), [sendMessage]);
+  const handleVoiceRecorded = useCallback(p => sendMessage(p), [sendMessage]);
+  const handleImageUploaded = useCallback(p => sendMessage(p), [sendMessage]);
 
-  const groups = groupMessagesByDate(messages);
+  if (!currentRoom) return (
+    <div className="chat-area"><div className="chat-bg" /><NoRoomSelected /></div>
+  );
+
+  const groups = groupMessagesByDate(roomMessages);
   const showMic = !text.trim();
 
   return (
@@ -92,13 +132,14 @@ export default function ChatWindow({ users, onlineUserIds, messages, socketRef }
           width: 40, height: 40, borderRadius: '50%',
           background: 'linear-gradient(135deg, #00a884, #075e54)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 20, flexShrink: 0
+          fontSize: 18, flexShrink: 0
         }}>
           💬
         </div>
         <div className="chat-header-info">
-          <h2>Chat General</h2>
+          <h2># {currentRoom.name}</h2>
           <p>
+            {currentRoom.description && <span style={{ color: 'var(--text-muted)' }}>{currentRoom.description} · </span>}
             <span className="online-count">{onlineUserIds.length} en línea</span>
             {' · '}{users.length} miembros
           </p>
@@ -107,15 +148,15 @@ export default function ChatWindow({ users, onlineUserIds, messages, socketRef }
 
       {/* Messages */}
       <div className="messages-container" id="messages-list">
-        {messages.length === 0 && (
+        {roomMessages.length === 0 && (
           <div className="empty-chat">
-            <div className="empty-chat-icon">💬</div>
-            <h3>¡Bienvenido a ChatApp!</h3>
-            <p>Sé el primero en enviar un mensaje. Podés escribir texto, enviar imágenes o notas de voz.</p>
+            <div className="empty-chat-icon">🏠</div>
+            <h3>¡Bienvenido a #{currentRoom.name}!</h3>
+            <p>Sé el primero en enviar un mensaje. Podés escribir texto, imágenes o notas de voz.</p>
           </div>
         )}
 
-        {groups.map((item, idx) => {
+        {groups.map(item => {
           if (item.type === 'divider') {
             return (
               <div key={item.key} className="date-divider">
@@ -125,9 +166,8 @@ export default function ChatWindow({ users, onlineUserIds, messages, socketRef }
           }
           const msg = item.message;
           const isOwn = msg.user_id === user?.id;
-          // Find index in messages array for grouping
-          const msgIdx = messages.findIndex(m => m.id === msg.id);
-          const prevMsg = messages[msgIdx - 1];
+          const msgIdx = roomMessages.findIndex(m => m.id === msg.id);
+          const prevMsg = roomMessages[msgIdx - 1];
           const showAvatar = !isOwn && (!prevMsg || prevMsg.user_id !== msg.user_id);
 
           return (
@@ -142,33 +182,25 @@ export default function ChatWindow({ users, onlineUserIds, messages, socketRef }
         <div ref={bottomRef} />
       </div>
 
-      {/* Input bar */}
+      {/* Input */}
       <div className="input-area">
         <div className="input-bar">
           <ImageUpload onUploaded={handleImageUploaded} disabled={sending} />
-
           <textarea
             ref={textareaRef}
             id="message-input"
             className="msg-textarea"
-            placeholder="Escribe un mensaje"
+            placeholder={`Mensaje en #${currentRoom.name}`}
             value={text}
             onChange={handleTextChange}
             onKeyDown={handleKeyDown}
             rows={1}
             disabled={sending}
           />
-
           {showMic ? (
             <VoiceRecorder onRecorded={handleVoiceRecorded} disabled={sending} />
           ) : (
-            <button
-              id="send-message-btn"
-              className="send-btn"
-              onClick={handleSendText}
-              disabled={sending}
-              title="Enviar mensaje"
-            >
+            <button id="send-message-btn" className="send-btn" onClick={handleSendText} disabled={sending} title="Enviar">
               ➤
             </button>
           )}

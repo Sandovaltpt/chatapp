@@ -37,16 +37,25 @@ const upload = multer({
   }
 });
 
-// GET /api/messages
+// GET /api/messages?room_id=xxx
 router.get('/messages', authMiddleware, async (req, res) => {
   try {
+    const { room_id = 'general' } = req.query;
     await db.read();
-    const messages = db.data.messages.slice(-200);
-    // Enrich with user info
+
+    // Verify room exists
+    const room = db.data.rooms.find(r => r.id === room_id);
+    if (!room) return res.status(404).json({ error: 'Sala no encontrada' });
+
+    const messages = db.data.messages
+      .filter(m => m.room_id === room_id)
+      .slice(-200);
+
     const enriched = messages.map(msg => {
       const user = db.data.users.find(u => u.id === msg.user_id);
       return { ...msg, user_name: user?.name || 'Unknown', avatar_color: user?.avatar_color || '#00a884' };
     });
+
     res.json(enriched);
   } catch (err) {
     console.error(err);

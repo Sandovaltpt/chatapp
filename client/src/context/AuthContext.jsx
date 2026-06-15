@@ -1,8 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-const AuthContext = createContext(null);
+// Dynamic server URL: use same host as page but port 3001
+// This way it works from any computer in the network automatically
+function getApiBase() {
+  const host = window.location.hostname;
+  return `http://${host}:3001`;
+}
 
-const API_BASE = 'http://localhost:3001';
+export const API_BASE = getApiBase();
+
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

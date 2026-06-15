@@ -11,6 +11,7 @@ import db from './db.js';
 import { verifyToken } from './auth.js';
 import authRouter from './routes/auth.js';
 import messagesRouter from './routes/messages.js';
+import roomsRouter from './routes/rooms.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -29,6 +30,7 @@ app.use('/uploads', express.static(uploadsDir));
 // Routes
 app.use('/api/auth', authRouter);
 app.use('/api', messagesRouter);
+app.use('/api', roomsRouter);
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
 // Socket.io
@@ -61,13 +63,27 @@ io.on('connection', (socket) => {
   onlineUsers.set(socket.id, { id: user.id, name: user.name });
   io.emit('online_users', getOnlineUserIds());
 
-  // Handle new message
+  // Join a room channel
+  socket.on('join_room', (roomId) => {
+    // Leave all previous rooms (except socket.io default)
+    const currentRooms = [...socket.rooms].filter(r => r !== socket.id);
+    currentRooms.forEach(r => socket.leave(r));
+    socket.join(roomId);
+    console.log(`${user.name} joined room: ${roomId}`);
+  });
+
+  // Handle new message in a room
   socket.on('send_message', async (data, callback) => {
     try {
-      const { type, content, file_url } = data;
+      const { type, content, file_url, room_id = 'general' } = data;
       if (!type || !content) return callback?.({ error: 'Datos inválidos' });
 
       await db.read();
+
+      // Verify room exists
+      const room = db.data.rooms.find(r => r.id === room_id);
+      if (!room) return callback?.({ error: 'Sala no encontrada' });
+
       const dbUser = db.data.users.find(u => u.id === user.id);
 
       const msg = {
@@ -78,18 +94,30 @@ io.on('connection', (socket) => {
         type,
         content,
         file_url: file_url || null,
+        room_id,
         created_at: Date.now(),
       };
 
       db.data.messages.push(msg);
       await db.write();
 
-      io.emit('new_message', msg);
+      // Broadcast to everyone in that room
+      io.to(room_id).emit('new_message', msg);
       callback?.({ success: true, id: msg.id });
     } catch (err) {
       console.error('send_message error:', err);
       callback?.({ error: 'Error al enviar mensaje' });
     }
+  });
+
+  // Room created by a user — broadcast to all
+  socket.on('room_created', (room) => {
+    io.emit('room_added', room);
+  });
+
+  // Room deleted by creator
+  socket.on('room_deleted', (roomId) => {
+    io.emit('room_removed', roomId);
   });
 
   socket.on('disconnect', () => {
@@ -104,4 +132,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 ChatApp Server running!`);
   console.log(`   Local:   http://localhost:${PORT}`);
   console.log(`   Network: http://0.0.0.0:${PORT}`);
+  console.log(`\n   Para acceder desde otra PC:`);
+  console.log(`   Obtén tu IP con: ipconfig`);
+  console.log(`   Luego accede a: http://TU_IP:${PORT}`);
 });
