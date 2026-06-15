@@ -1,10 +1,22 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-// Dynamic server URL: use same host as page but port 3001
-// This way it works from any computer in the network automatically
+/**
+ * Detecta automáticamente la URL del servidor:
+ * - Si existe VITE_API_URL (variable de entorno), la usa directamente
+ * - En desarrollo (Vite dev server): conecta a localhost:3001
+ * - En producción (mismo servidor): usa el origen de la página (URLs relativas)
+ */
 function getApiBase() {
-  const host = window.location.hostname;
-  return `http://${host}:3001`;
+  // Variable de entorno explícita (opcional, para configuración personalizada)
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  // En desarrollo, el backend corre separado en el puerto 3001
+  if (import.meta.env.DEV) {
+    return `http://${window.location.hostname}:3001`;
+  }
+  // En producción, el backend sirve también el frontend → mismo origen
+  return window.location.origin;
 }
 
 export const API_BASE = getApiBase();
@@ -18,7 +30,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const savedToken = localStorage.getItem('chatapp_token');
-    const savedUser = localStorage.getItem('chatapp_user');
+    const savedUser  = localStorage.getItem('chatapp_user');
     if (savedToken && savedUser) {
       try {
         setToken(savedToken);

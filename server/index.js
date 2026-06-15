@@ -14,6 +14,7 @@ import messagesRouter from './routes/messages.js';
 import roomsRouter from './routes/rooms.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const isProd = process.env.NODE_ENV === 'production';
 
 const app = express();
 const server = createServer(app);
@@ -22,20 +23,39 @@ const server = createServer(app);
 const uploadsDir = join(__dirname, 'uploads');
 if (!existsSync(uploadsDir)) mkdirSync(uploadsDir, { recursive: true });
 
-// Middleware
-app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'], allowedHeaders: ['Content-Type', 'Authorization'] }));
+// CORS: en producción solo permite el mismo origen
+const allowedOrigins = isProd
+  ? [process.env.FRONTEND_URL || '*']
+  : '*';
+
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
 
-// Rutas
+// Rutas API
 app.use('/api/auth', authRouter);
 app.use('/api', messagesRouter);
 app.use('/api', roomsRouter);
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
+// En producción: servir el frontend de React (build de Vite)
+const clientDist = join(__dirname, '../client/dist');
+if (isProd && existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+  // Cualquier ruta que no sea /api ni /uploads devuelve el index.html de React
+  app.get('*', (req, res) => {
+    res.sendFile(join(clientDist, 'index.html'));
+  });
+  console.log('📦 Sirviendo frontend desde:', clientDist);
+}
+
 // Socket.io
 const io = new Server(server, {
-  cors: { origin: '*', methods: ['GET', 'POST'] },
+  cors: { origin: allowedOrigins, methods: ['GET', 'POST'] },
   maxHttpBufferSize: 25e6
 });
 
@@ -65,7 +85,6 @@ io.on('connection', (socket) => {
 
   // Unirse a un canal de sala
   socket.on('join_room', (roomId) => {
-    // Salir de todas las salas anteriores (excepto el canal predeterminado de socket.io)
     const currentRooms = [...socket.rooms].filter(r => r !== socket.id);
     currentRooms.forEach(r => socket.leave(r));
     socket.join(roomId);
@@ -79,8 +98,6 @@ io.on('connection', (socket) => {
       if (!type || !content) return callback?.({ error: 'Datos inválidos' });
 
       await db.read();
-
-      // Verificar que la sala existe
       const room = db.data.rooms.find(r => r.id === room_id);
       if (!room) return callback?.({ error: 'Sala no encontrada' });
 
@@ -101,7 +118,6 @@ io.on('connection', (socket) => {
       db.data.messages.push(msg);
       await db.write();
 
-      // Emitir a todos en esa sala
       io.to(room_id).emit('new_message', msg);
       callback?.({ success: true, id: msg.id });
     } catch (err) {
@@ -110,15 +126,8 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Sala creada por un usuario: transmitir a todos
-  socket.on('room_created', (room) => {
-    io.emit('room_added', room);
-  });
-
-  // Sala eliminada por su creador
-  socket.on('room_deleted', (roomId) => {
-    io.emit('room_removed', roomId);
-  });
+  socket.on('room_created', (room) => { io.emit('room_added', room); });
+  socket.on('room_deleted', (roomId) => { io.emit('room_removed', roomId); });
 
   socket.on('disconnect', () => {
     onlineUsers.delete(socket.id);
@@ -129,10 +138,11 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Servidor ChatApp en ejecución!`);
-  console.log(`   Local:   http://localhost:${PORT}`);
-  console.log(`   Red:     http://0.0.0.0:${PORT}`);
-  console.log(`\n   Para acceder desde otra PC:`);
-  console.log(`   Obtén tu IP con: ipconfig`);
-  console.log(`   Luego accede a: http://TU_IP:${PORT}`);
+  console.log(`\n🚀 ChatApp corriendo en el puerto ${PORT}`);
+  if (isProd) {
+    console.log(`   Producción: el frontend se sirve desde el mismo servidor`);
+  } else {
+    console.log(`   Desarrollo: http://localhost:${PORT}`);
+    console.log(`   Frontend:   http://localhost:5173`);
+  }
 });

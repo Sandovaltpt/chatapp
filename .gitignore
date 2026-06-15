@@ -1,8 +1,29 @@
-# ChatApp — WhatsApp Clone
+# Dependencias (se instalan en el servidor de deploy)
 node_modules/
-data.json
-uploads/
+client/node_modules/
+server/node_modules/
+
+# Build del frontend (Render lo genera al hacer deploy)
+client/dist/
+
+# Base de datos local (Render usa su propio almacenamiento)
+server/data.json
+
+# Archivos subidos localmente
+server/uploads/
+
+# Variables de entorno (se configuran en el panel de Render)
 .env
-dist/
+server/.env
+
+# Sistema operativo
 .DS_Store
+Thumbs.db
+
+# Logs
 *.log
+npm-debug.log*
+
+# Editor
+.vscode/
+.idea/
