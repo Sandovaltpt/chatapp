@@ -5,11 +5,11 @@ import { authMiddleware } from '../auth.js';
 
 const router = express.Router();
 
-// GET /api/rooms — list all rooms
+// GET /api/rooms — listar todas las salas
 router.get('/rooms', authMiddleware, async (req, res) => {
   try {
     await db.read();
-    // Include message count per room
+    // Incluir conteo de mensajes por sala
     const rooms = db.data.rooms.map(room => {
       const msgCount = db.data.messages.filter(m => m.room_id === room.id).length;
       const lastMsg = db.data.messages
@@ -24,7 +24,7 @@ router.get('/rooms', authMiddleware, async (req, res) => {
   }
 });
 
-// POST /api/rooms — create new room
+// POST /api/rooms — crear nueva sala
 router.post('/rooms', authMiddleware, async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -34,7 +34,7 @@ router.post('/rooms', authMiddleware, async (req, res) => {
 
     await db.read();
 
-    // Check duplicate name
+    // Verificar nombre duplicado
     const exists = db.data.rooms.find(r => r.name.toLowerCase() === name.trim().toLowerCase());
     if (exists) {
       return res.status(409).json({ error: 'Ya existe una sala con ese nombre' });
@@ -60,7 +60,7 @@ router.post('/rooms', authMiddleware, async (req, res) => {
   }
 });
 
-// DELETE /api/rooms/:id — delete room (only creator or if no messages)
+// DELETE /api/rooms/:id — eliminar sala (solo el creador)
 router.delete('/rooms/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;

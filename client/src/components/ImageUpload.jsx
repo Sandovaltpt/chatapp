@@ -12,13 +12,13 @@ export default function ImageUpload({ onUploaded, disabled }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Preview
+    // Vista previa
     const reader = new FileReader();
     reader.onload = ev => setPreview(ev.target.result);
     reader.readAsDataURL(file);
     setFileName(file.name);
 
-    // Upload immediately
+    // Subir inmediatamente
     setUploading(true);
     try {
       const formData = new FormData();
@@ -34,7 +34,7 @@ export default function ImageUpload({ onUploaded, disabled }) {
 
       onUploaded({ type: 'image', content: '📷 Imagen', file_url: data.url, previewSrc: preview });
     } catch (err) {
-      console.error('Image upload error:', err);
+      console.error('Error al subir imagen:', err);
       alert('Error al subir la imagen');
     } finally {
       setUploading(false);

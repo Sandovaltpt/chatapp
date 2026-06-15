@@ -47,7 +47,7 @@ export default function VoiceRecorder({ onRecorded, disabled }) {
       setSeconds(0);
       intervalRef.current = setInterval(() => setSeconds(s => s + 1), 1000);
     } catch (err) {
-      console.error('Microphone error:', err);
+      console.error('Error de micrófono:', err);
       alert('No se pudo acceder al micrófono. Por favor, otorga el permiso desde tu navegador.');
     }
   };
@@ -66,7 +66,7 @@ export default function VoiceRecorder({ onRecorded, disabled }) {
     mediaRecorderRef.current?.stop();
     chunksRef.current = [];
     streamRef.current?.getTracks().forEach(t => t.stop());
-    // Override onstop to skip upload
+    // Cancelar la subida al detener
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.onstop = null;
     }
@@ -87,7 +87,7 @@ export default function VoiceRecorder({ onRecorded, disabled }) {
       if (!res.ok) throw new Error(data.error);
       onRecorded({ type: 'voice', content: '🎤 Nota de voz', file_url: data.url });
     } catch (err) {
-      console.error('Voice upload error:', err);
+      console.error('Error al subir nota de voz:', err);
       alert('Error al subir la nota de voz');
     }
   };

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChatApp — Mensajería en tiempo real</title>
+    <meta name="description" content="Aplicación de chat en tiempo real con mensajes de voz, imágenes y lista de contactos." />
+    <!-- Redirige automáticamente al frontend cuando los servidores están corriendo -->
+    <meta http-equiv="refresh" content="0; url=http://localhost:3000" />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .container {
+        text-align: center;
+        padding: 40px;
+        max-width: 480px;
+      }
+      .logo {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        animation: bounce 1.5s infinite;
+      }
+      @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-12px); }
+      }
+      h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #00a884;
+        margin-bottom: 10px;
+      }
+      p {
+        color: #94a3b8;
+        font-size: 1rem;
+        margin-bottom: 30px;
+        line-height: 1.6;
+      }
+      .steps {
+        background: #1e293b;
+        border-radius: 14px;
+        padding: 24px;
+        text-align: left;
+        margin-bottom: 28px;
+      }
+      .steps h3 {
+        font-size: 0.85rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 16px;
+      }
+      .step {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .step:last-child { margin-bottom: 0; }
+      .step-num {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #00a884;
+        color: white;
+        font-size: 0.8rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+      .step-text { font-size: 0.9rem; color: #cbd5e1; line-height: 1.5; }
+      code {
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        padding: 2px 8px;
+        font-size: 0.82rem;
+        color: #34d399;
+        font-family: 'Consolas', 'Courier New', monospace;
+        display: block;
+        margin-top: 6px;
+      }
+      .btn {
+        display: inline-block;
+        background: #00a884;
+        color: white;
+        text-decoration: none;
+        padding: 14px 32px;
+        border-radius: 50px;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: background 0.2s, transform 0.1s;
+        cursor: pointer;
+        border: none;
+      }
+      .btn:hover { background: #128c7e; transform: scale(1.03); }
+      .status {
+        margin-top: 20px;
+        font-size: 0.82rem;
+        color: #475569;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">💬</div>
+      <h1>ChatApp</h1>
+      <p>Mensajería en tiempo real.<br/>Abriendo la aplicación…</p>
+
+      <div class="steps">
+        <h3>Si la página no carga, sigue estos pasos:</h3>
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">
+            Inicia el servidor backend
+            <code>cd server &amp;&amp; node index.js</code>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">
+            Inicia el servidor frontend (en otra terminal)
+            <code>cd client &amp;&amp; npm run dev</code>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">
+            Abre la aplicación en tu navegador
+            <code>http://localhost:3000</code>
+          </div>
+        </div>
+      </div>
+
+      <a class="btn" href="http://localhost:3000">Abrir ChatApp →</a>
+      <p class="status">Backend: <a href="http://localhost:3001/api/health" style="color:#00a884">localhost:3001</a> · Frontend: <a href="http://localhost:3000" style="color:#00a884">localhost:3000</a></p>
+    </div>
+  </body>
+</html>

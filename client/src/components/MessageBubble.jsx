@@ -7,7 +7,7 @@ function getInitials(name = '') {
 
 function formatTime(ts) {
   const d = new Date(typeof ts === 'number' && ts < 1e12 ? ts * 1000 : ts);
-  return d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
 }
 
 function formatDate(ts) {
@@ -18,11 +18,11 @@ function formatDate(ts) {
 
   if (d.toDateString() === today.toDateString()) return 'Hoy';
   if (d.toDateString() === yesterday.toDateString()) return 'Ayer';
-  return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+  return d.toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-// Fake waveform bars
-function AudioWaveform() {
+// Barras de onda de audio (decorativas)
+function OndaAudio() {
   const bars = Array.from({ length: 24 }, (_, i) => {
     const h = 6 + Math.floor(Math.abs(Math.sin(i * 0.7 + 1)) * 22);
     return h;
@@ -67,7 +67,7 @@ function AudioBubble({ src, API_BASE }) {
       <button className="audio-play-btn" onClick={toggle} aria-label={playing ? 'Pausar' : 'Reproducir'}>
         {playing ? '⏸' : '▶'}
       </button>
-      <AudioWaveform />
+      <OndaAudio />
       <span className="audio-duration">
         {playing || current > 0
           ? `${Math.floor(current)}s`
@@ -129,7 +129,7 @@ export default function MessageBubble({ message, isOwn, showAvatar }) {
         </div>
       </div>
 
-      {/* Image lightbox */}
+      {/* Visor ampliado de imagen */}
       {imgOpen && imgSrc && (
         <div className="img-modal-backdrop" onClick={() => setImgOpen(false)}>
           <button className="img-modal-close" onClick={() => setImgOpen(false)}>✕</button>

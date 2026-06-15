@@ -9,7 +9,7 @@ import { authMiddleware } from '../auth.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const router = express.Router();
 
-// Multer storage
+// Almacenamiento Multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, join(__dirname, '../uploads'));
@@ -43,7 +43,7 @@ router.get('/messages', authMiddleware, async (req, res) => {
     const { room_id = 'general' } = req.query;
     await db.read();
 
-    // Verify room exists
+    // Verificar que la sala existe
     const room = db.data.rooms.find(r => r.id === room_id);
     if (!room) return res.status(404).json({ error: 'Sala no encontrada' });
 
@@ -53,7 +53,7 @@ router.get('/messages', authMiddleware, async (req, res) => {
 
     const enriched = messages.map(msg => {
       const user = db.data.users.find(u => u.id === msg.user_id);
-      return { ...msg, user_name: user?.name || 'Unknown', avatar_color: user?.avatar_color || '#00a884' };
+      return { ...msg, user_name: user?.name || 'Desconocido', avatar_color: user?.avatar_color || '#00a884' };
     });
 
     res.json(enriched);

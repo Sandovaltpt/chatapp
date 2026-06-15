@@ -24,8 +24,8 @@ function groupMessagesByDate(messages) {
   return groups;
 }
 
-// "No room selected" placeholder
-function NoRoomSelected() {
+// Pantalla cuando no hay sala seleccionada
+function SinSalaSeleccionada() {
   return (
     <div className="no-room-selected">
       <div className="no-room-icon">💬</div>
@@ -43,28 +43,28 @@ export default function ChatWindow({ currentRoom, onlineUserIds, users, allMessa
   const textareaRef = useRef(null);
   const prevRoomRef = useRef(null);
 
-  // Filter messages for current room
+  // Filtrar mensajes de la sala actual
   const roomMessages = currentRoom
     ? allMessages.filter(m => m.room_id === currentRoom.id)
     : [];
 
-  // Load messages when switching rooms
+  // Cargar mensajes al cambiar de sala
   useEffect(() => {
     if (!currentRoom || !token) return;
     if (prevRoomRef.current === currentRoom.id) return;
     prevRoomRef.current = currentRoom.id;
 
-    // Join socket room
+    // Unirse a la sala de socket
     socketRef?.current?.emit('join_room', currentRoom.id);
 
-    // Fetch room messages from server
+    // Obtener mensajes de la sala desde el servidor
     fetch(`${API_BASE}/api/messages?room_id=${currentRoom.id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
       .then(data => {
         if (!Array.isArray(data)) return;
-        // Merge: add fetched messages to allMessages (avoid duplicates)
+        // Combinar: agregar mensajes obtenidos a allMessages (evitar duplicados)
         setAllMessages(prev => {
           const ids = new Set(prev.map(m => m.id));
           const newMsgs = data.filter(m => !ids.has(m.id));
@@ -74,12 +74,12 @@ export default function ChatWindow({ currentRoom, onlineUserIds, users, allMessa
       .catch(console.error);
   }, [currentRoom?.id, token]);
 
-  // Auto-scroll on new messages in current room
+  // Desplazamiento automático con nuevos mensajes en la sala actual
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [roomMessages.length]);
 
-  // Auto-resize textarea
+  // Ajuste automático del área de texto
   const handleTextChange = (e) => {
     setText(e.target.value);
     const ta = textareaRef.current;
@@ -96,7 +96,7 @@ export default function ChatWindow({ currentRoom, onlineUserIds, users, allMessa
     setSending(true);
     socket.emit('send_message', { ...payload, room_id: currentRoom.id }, (ack) => {
       setSending(false);
-      if (ack?.error) console.error('Send error:', ack.error);
+      if (ack?.error) console.error('Error al enviar:', ack.error);
     });
   }, [socketRef, currentRoom]);
 
@@ -116,7 +116,7 @@ export default function ChatWindow({ currentRoom, onlineUserIds, users, allMessa
   const handleImageUploaded = useCallback(p => sendMessage(p), [sendMessage]);
 
   if (!currentRoom) return (
-    <div className="chat-area"><div className="chat-bg" /><NoRoomSelected /></div>
+    <div className="chat-area"><div className="chat-bg" /><SinSalaSeleccionada /></div>
   );
 
   const groups = groupMessagesByDate(roomMessages);
@@ -126,7 +126,7 @@ export default function ChatWindow({ currentRoom, onlineUserIds, users, allMessa
     <div className="chat-area">
       <div className="chat-bg" />
 
-      {/* Header */}
+      {/* Encabezado */}
       <div className="chat-header">
         <div style={{
           width: 40, height: 40, borderRadius: '50%',
@@ -146,7 +146,7 @@ export default function ChatWindow({ currentRoom, onlineUserIds, users, allMessa
         </div>
       </div>
 
-      {/* Messages */}
+      {/* Mensajes */}
       <div className="messages-container" id="messages-list">
         {roomMessages.length === 0 && (
           <div className="empty-chat">
@@ -182,7 +182,7 @@ export default function ChatWindow({ currentRoom, onlineUserIds, users, allMessa
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
+      {/* Campo de entrada */}
       <div className="input-area">
         <div className="input-bar">
           <ImageUpload onUploaded={handleImageUploaded} disabled={sending} />
@@ -190,7 +190,7 @@ export default function ChatWindow({ currentRoom, onlineUserIds, users, allMessa
             ref={textareaRef}
             id="message-input"
             className="msg-textarea"
-            placeholder={`Mensaje en #${currentRoom.name}`}
+            placeholder={`Escribe un mensaje en #${currentRoom.name}`}
             value={text}
             onChange={handleTextChange}
             onKeyDown={handleKeyDown}

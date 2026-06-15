@@ -47,7 +47,7 @@ router.post('/register', async (req, res) => {
 
     res.status(201).json({ token, user: safeUser });
   } catch (err) {
-    console.error('Register error:', err);
+    console.error('Error al registrar usuario:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -77,7 +77,7 @@ router.post('/login', async (req, res) => {
 
     res.json({ token, user: safeUser });
   } catch (err) {
-    console.error('Login error:', err);
+    console.error('Error al iniciar sesión:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });

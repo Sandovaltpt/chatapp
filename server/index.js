@@ -18,7 +18,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const server = createServer(app);
 
-// Ensure uploads dir exists
+// Asegurar que exista el directorio de subidas
 const uploadsDir = join(__dirname, 'uploads');
 if (!existsSync(uploadsDir)) mkdirSync(uploadsDir, { recursive: true });
 
@@ -27,7 +27,7 @@ app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'], allowedHe
 app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
 
-// Routes
+// Rutas
 app.use('/api/auth', authRouter);
 app.use('/api', messagesRouter);
 app.use('/api', roomsRouter);
@@ -39,17 +39,17 @@ const io = new Server(server, {
   maxHttpBufferSize: 25e6
 });
 
-// Auth middleware for sockets
+// Middleware de autenticación para sockets
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token;
-  if (!token) return next(new Error('Authentication required'));
+  if (!token) return next(new Error('Autenticación requerida'));
   const payload = verifyToken(token);
-  if (!payload) return next(new Error('Invalid token'));
+  if (!payload) return next(new Error('Token inválido'));
   socket.user = payload;
   next();
 });
 
-// Track online users: socketId -> { id, name }
+// Registro de usuarios en línea: socketId -> { id, name }
 const onlineUsers = new Map();
 
 function getOnlineUserIds() {
@@ -58,21 +58,21 @@ function getOnlineUserIds() {
 
 io.on('connection', (socket) => {
   const user = socket.user;
-  console.log(`✅ ${user.name} connected (${socket.id})`);
+  console.log(`✅ ${user.name} conectado (${socket.id})`);
 
   onlineUsers.set(socket.id, { id: user.id, name: user.name });
   io.emit('online_users', getOnlineUserIds());
 
-  // Join a room channel
+  // Unirse a un canal de sala
   socket.on('join_room', (roomId) => {
-    // Leave all previous rooms (except socket.io default)
+    // Salir de todas las salas anteriores (excepto el canal predeterminado de socket.io)
     const currentRooms = [...socket.rooms].filter(r => r !== socket.id);
     currentRooms.forEach(r => socket.leave(r));
     socket.join(roomId);
-    console.log(`${user.name} joined room: ${roomId}`);
+    console.log(`${user.name} se unió a la sala: ${roomId}`);
   });
 
-  // Handle new message in a room
+  // Manejar nuevo mensaje en una sala
   socket.on('send_message', async (data, callback) => {
     try {
       const { type, content, file_url, room_id = 'general' } = data;
@@ -80,7 +80,7 @@ io.on('connection', (socket) => {
 
       await db.read();
 
-      // Verify room exists
+      // Verificar que la sala existe
       const room = db.data.rooms.find(r => r.id === room_id);
       if (!room) return callback?.({ error: 'Sala no encontrada' });
 
@@ -101,21 +101,21 @@ io.on('connection', (socket) => {
       db.data.messages.push(msg);
       await db.write();
 
-      // Broadcast to everyone in that room
+      // Emitir a todos en esa sala
       io.to(room_id).emit('new_message', msg);
       callback?.({ success: true, id: msg.id });
     } catch (err) {
-      console.error('send_message error:', err);
+      console.error('Error al enviar mensaje:', err);
       callback?.({ error: 'Error al enviar mensaje' });
     }
   });
 
-  // Room created by a user — broadcast to all
+  // Sala creada por un usuario: transmitir a todos
   socket.on('room_created', (room) => {
     io.emit('room_added', room);
   });
 
-  // Room deleted by creator
+  // Sala eliminada por su creador
   socket.on('room_deleted', (roomId) => {
     io.emit('room_removed', roomId);
   });
@@ -123,15 +123,15 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     onlineUsers.delete(socket.id);
     io.emit('online_users', getOnlineUserIds());
-    console.log(`❌ ${user.name} disconnected`);
+    console.log(`❌ ${user.name} desconectado`);
   });
 });
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 ChatApp Server running!`);
+  console.log(`🚀 Servidor ChatApp en ejecución!`);
   console.log(`   Local:   http://localhost:${PORT}`);
-  console.log(`   Network: http://0.0.0.0:${PORT}`);
+  console.log(`   Red:     http://0.0.0.0:${PORT}`);
   console.log(`\n   Para acceder desde otra PC:`);
   console.log(`   Obtén tu IP con: ipconfig`);
   console.log(`   Luego accede a: http://TU_IP:${PORT}`);

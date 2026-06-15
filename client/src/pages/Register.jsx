@@ -51,7 +51,7 @@ export default function Register({ onGoLogin }) {
             </svg>
           </div>
           <h1>Crear cuenta</h1>
-          <p>Únete a ChatApp hoy</p>
+          <p>Crea tu cuenta y empieza a chatear</p>
         </div>
 
         {error && <div className="error-banner">{error}</div>}
@@ -87,7 +87,7 @@ export default function Register({ onGoLogin }) {
             <input
               id="reg-phone"
               type="tel"
-              placeholder="+569 1234 5678"
+              placeholder="+56 9 1234 5678"
               value={form.phone}
               onChange={set('phone')}
               autoComplete="tel"

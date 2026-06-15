@@ -12,7 +12,7 @@ function getRoomEmoji(name) {
   return emojis[hash % emojis.length];
 }
 
-// Modal to create a new room
+// Modal para crear una nueva sala
 function CreateRoomModal({ onClose, onCreated }) {
   const { token, API_BASE } = useAuth();
   const [name, setName] = useState('');
@@ -98,7 +98,7 @@ export default function Sidebar({ rooms, users, onlineUserIds, messages, current
   const [search, setSearch] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // --- Rooms tab ---
+  // --- Pestaña de salas ---
   const filteredRooms = rooms.filter(r =>
     r.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -131,7 +131,7 @@ export default function Sidebar({ rooms, users, onlineUserIds, messages, current
     }
   };
 
-  // --- Members tab ---
+  // --- Pestaña de miembros ---
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -149,7 +149,7 @@ export default function Sidebar({ rooms, users, onlineUserIds, messages, current
   return (
     <>
       <div className="sidebar">
-        {/* Header */}
+        {/* Encabezado */}
         <div className="sidebar-header">
           <span className="sidebar-title">ChatApp</span>
           <div style={{ fontSize: 12, color: 'var(--wa-green)', fontWeight: 600 }}>
@@ -157,7 +157,7 @@ export default function Sidebar({ rooms, users, onlineUserIds, messages, current
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Pestañas */}
         <div className="sidebar-tabs">
           <button
             id="tab-rooms"
@@ -175,7 +175,7 @@ export default function Sidebar({ rooms, users, onlineUserIds, messages, current
           </button>
         </div>
 
-        {/* Search */}
+        {/* Búsqueda */}
         <div className="sidebar-search">
           <div className="search-input-wrap">
             <span>🔍</span>
@@ -189,10 +189,10 @@ export default function Sidebar({ rooms, users, onlineUserIds, messages, current
           </div>
         </div>
 
-        {/* Content */}
+        {/* Contenido */}
         {tab === 'rooms' ? (
           <div className="rooms-list">
-            {/* New room button */}
+            {/* Botón nueva sala */}
             <button
               id="new-room-btn"
               className="new-room-btn"
@@ -290,7 +290,7 @@ export default function Sidebar({ rooms, users, onlineUserIds, messages, current
           </div>
         )}
 
-        {/* Footer */}
+        {/* Pie de página */}
         <div className="sidebar-footer">
           <div className="current-user-card">
             <div className="avatar-circle" style={{ background: user?.avatar_color || '#00a884', width: 36, height: 36, fontSize: 14 }}>
@@ -305,7 +305,7 @@ export default function Sidebar({ rooms, users, onlineUserIds, messages, current
         </div>
       </div>
 
-      {/* Create Room Modal */}
+      {/* Modal Crear Sala */}
       {showCreateModal && (
         <CreateRoomModal
           onClose={() => setShowCreateModal(false)}
