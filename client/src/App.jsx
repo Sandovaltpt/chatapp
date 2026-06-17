@@ -34,6 +34,20 @@ export default function App() {
   const [onlineUserIds, setOnlineUserIds] = useState([]);
   const [currentRoom, setCurrentRoom] = useState(null);
   const socketRef = useRef(null);
+  const currentRoomRef = useRef(null); // ref para acceder al room actual dentro de los handlers del socket
+
+  // Marca de tiempo de última lectura por sala (persiste en localStorage)
+  const [readTimestamps, setReadTimestamps] = useState(() => {
+    try {
+      const saved = localStorage.getItem('chatapp_read');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  // Mantener ref sincronizada con el room actual (para usarla en handlers del socket)
+  useEffect(() => { currentRoomRef.current = currentRoom; }, [currentRoom]);
 
   // Guardar mensajes en localStorage cada vez que cambian
   useEffect(() => {
@@ -42,15 +56,19 @@ export default function App() {
       return;
     }
     try {
-      // Máximo 1000 mensajes para no superar el límite de 5MB
       localStorage.setItem('chatapp_messages', JSON.stringify(allMessages.slice(-1000)));
     } catch {
-      // localStorage lleno — limpiar mensajes viejos y reintentar
       try {
         localStorage.setItem('chatapp_messages', JSON.stringify(allMessages.slice(-200)));
       } catch { /* nada */ }
     }
   }, [allMessages, user]);
+
+  // Guardar readTimestamps en localStorage
+  useEffect(() => {
+    if (!user) { localStorage.removeItem('chatapp_read'); return; }
+    try { localStorage.setItem('chatapp_read', JSON.stringify(readTimestamps)); } catch { /* nada */ }
+  }, [readTimestamps, user]);
 
   // Configurar socket y cargar datos iniciales al autenticarse
   useEffect(() => {
@@ -74,6 +92,10 @@ export default function App() {
         if (prev.find(m => m.id === msg.id)) return prev;
         return [...prev, msg];
       });
+      // Si el usuario está viendo esa sala ahora mismo, marcarla como leída
+      if (currentRoomRef.current?.id === msg.room_id) {
+        setReadTimestamps(prev => ({ ...prev, [msg.room_id]: Date.now() }));
+      }
     });
 
     // Eventos de salas desde otros clientes
@@ -99,9 +121,12 @@ export default function App() {
       .then(data => {
         if (!Array.isArray(data)) return;
         setRooms(data);
-        // Seleccionar sala General automáticamente
+        // Seleccionar sala General automáticamente y marcarla como leída
         const general = data.find(r => r.id === 'general');
-        if (general) setCurrentRoom(general);
+        if (general) {
+          setCurrentRoom(general);
+          setReadTimestamps(prev => ({ ...prev, [general.id]: Date.now() }));
+        }
       })
       .catch(console.error);
 
@@ -117,11 +142,11 @@ export default function App() {
     };
   }, [token]);
 
-  // Al seleccionar una sala, unirse al canal de socket
+  // Al seleccionar una sala: unirse al socket y marcar como leída
   const handleSelectRoom = (room) => {
     setCurrentRoom(room);
-    // Unirse a la sala de socket
     socketRef.current?.emit('join_room', room.id);
+    setReadTimestamps(prev => ({ ...prev, [room.id]: Date.now() }));
   };
 
   // Manejador de actualización de salas: también transmite por socket
@@ -155,6 +180,7 @@ export default function App() {
         currentRoom={currentRoom}
         onSelectRoom={handleSelectRoom}
         onRoomsUpdate={handleRoomsUpdate}
+        readTimestamps={readTimestamps}
       />
       <ChatWindow
         currentRoom={currentRoom}

@@ -92,7 +92,7 @@ function CreateRoomModal({ onClose, onCreated }) {
   );
 }
 
-export default function Sidebar({ rooms, users, onlineUserIds, messages, currentRoom, onSelectRoom, onRoomsUpdate }) {
+export default function Sidebar({ rooms, users, onlineUserIds, messages, currentRoom, onSelectRoom, onRoomsUpdate, readTimestamps = {} }) {
   const { user, token, logout, API_BASE } = useAuth();
   const [tab, setTab] = useState('rooms'); // 'rooms' | 'members'
   const [search, setSearch] = useState('');
@@ -209,9 +209,13 @@ export default function Sidebar({ rooms, users, onlineUserIds, messages, current
             )}
 
             {filteredRooms.map(room => {
-              const msgCount = messages.filter(m => m.room_id === room.id).length;
               const isActive = currentRoom?.id === room.id;
               const isOwner = room.created_by === user?.id;
+              // Mensajes no leídos: solo los más nuevos que la última lectura de esta sala
+              const lastRead = readTimestamps[room.id] || 0;
+              const unreadCount = isActive
+                ? 0
+                : messages.filter(m => m.room_id === room.id && m.created_at > lastRead).length;
 
               return (
                 <div
@@ -230,8 +234,8 @@ export default function Sidebar({ rooms, users, onlineUserIds, messages, current
                     </div>
                   </div>
                   <div className="room-meta">
-                    {msgCount > 0 && (
-                      <span className="room-msg-count">{msgCount > 99 ? '99+' : msgCount}</span>
+                    {unreadCount > 0 && (
+                      <span className="room-msg-count">{unreadCount > 99 ? '99+' : unreadCount}</span>
                     )}
                     {!room.is_default && isOwner && (
                       <button
