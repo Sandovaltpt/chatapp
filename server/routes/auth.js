@@ -45,6 +45,10 @@ router.post('/register', async (req, res) => {
     const { password_hash: _, ...safeUser } = newUser;
     const token = generateToken(safeUser);
 
+    // Notificar a todos los clientes conectados que hay un nuevo usuario
+    const io = req.app.get('io');
+    if (io) io.emit('user_registered', safeUser);
+
     res.status(201).json({ token, user: safeUser });
   } catch (err) {
     console.error('Error al registrar usuario:', err);

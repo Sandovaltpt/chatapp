@@ -113,6 +113,14 @@ export default function App() {
       setCurrentRoom(prev => (prev?.id === roomId ? null : prev));
     });
 
+    // Nuevo usuario registrado: actualizar lista de miembros en tiempo real
+    socket.on('user_registered', newUser => {
+      setUsers(prev => {
+        if (prev.find(u => u.id === newUser.id)) return prev;
+        return [...prev, newUser];
+      });
+    });
+
     // Cargar datos iniciales
     const headers = { Authorization: `Bearer ${token}` };
 

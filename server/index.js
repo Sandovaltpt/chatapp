@@ -59,6 +59,9 @@ const io = new Server(server, {
   maxHttpBufferSize: 25e6
 });
 
+// Exponer io a las rutas (para emitir eventos desde auth, etc.)
+app.set('io', io);
+
 // Middleware de autenticación para sockets
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token;
@@ -118,7 +121,9 @@ io.on('connection', (socket) => {
       db.data.messages.push(msg);
       await db.write();
 
-      io.to(room_id).emit('new_message', msg);
+      // Emitir a TODOS los clientes conectados (no solo los de la sala)
+      // Esto permite que el badge de no leídos funcione en cualquier sala
+      io.emit('new_message', msg);
       callback?.({ success: true, id: msg.id });
     } catch (err) {
       console.error('Error al enviar mensaje:', err);
