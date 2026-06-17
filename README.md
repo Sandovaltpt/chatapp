@@ -1,42 +1,37 @@
-# 💬 ChatApp
+# chatapp
 
-**Aplicación de mensajería en tiempo real estilo WhatsApp**
+app de chat en tiempo real que hice con react y node. tiene mensajes de voz, imagenes, salas y usuarios en linea.
 
-## 🚀 [→ Abrir ChatApp en vivo](https://chatapp-production-dc55.up.railway.app)
+## link
 
-> Funciona en celular y PC. Registrate y chateá al instante.
+https://chatapp-production-dc55.up.railway.app
+
+ahi pueden entrar, registrarse y usarla directamente desde el cel o la pc.
 
 ---
 
-## ✨ Funcionalidades
+## como correrlo local
 
-- 💬 Chat en tiempo real con WebSockets (Socket.io)
-- 📷 Envío de imágenes
-- 🎙️ Mensajes de voz
-- 👥 Múltiples salas de chat
-- 🟢 Indicador de usuarios en línea
-- 🔐 Registro e inicio de sesión con JWT
+necesitas tener node instalado
 
-## 🛠️ Tecnologías
-
-| Frontend | Backend |
-|----------|---------|
-| React + Vite | Node.js + Express |
-| Socket.io-client | Socket.io |
-| CSS puro | JWT + bcrypt |
-
-## 💻 Correr localmente
-
-```bash
-# 1. Instalar dependencias
+```
 npm run install:all
+```
 
-# 2. Iniciar el backend (terminal 1)
+despues en dos terminales distintas:
+
+```
 npm run dev:server
-
-# 3. Iniciar el frontend (terminal 2)
+```
+```
 npm run dev:client
 ```
 
-- Frontend: http://localhost:3000
-- Backend: http://localhost:3001
+el frontend queda en localhost:3000 y el backend en el 3001
+
+## stack
+
+- react + vite
+- express + socket.io
+- jwt para el login
+- lowdb como base de datos (archivo json)
