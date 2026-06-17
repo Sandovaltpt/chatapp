@@ -22,10 +22,35 @@ export default function App() {
   // Estado compartido
   const [rooms, setRooms] = useState([]);
   const [users, setUsers] = useState([]);
-  const [allMessages, setAllMessages] = useState([]); // todos los mensajes de todas las salas
+  // Inicializar mensajes desde caché local (persiste el refresh)
+  const [allMessages, setAllMessages] = useState(() => {
+    try {
+      const cached = localStorage.getItem('chatapp_messages');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
   const [onlineUserIds, setOnlineUserIds] = useState([]);
   const [currentRoom, setCurrentRoom] = useState(null);
   const socketRef = useRef(null);
+
+  // Guardar mensajes en localStorage cada vez que cambian
+  useEffect(() => {
+    if (!user) {
+      localStorage.removeItem('chatapp_messages');
+      return;
+    }
+    try {
+      // Máximo 1000 mensajes para no superar el límite de 5MB
+      localStorage.setItem('chatapp_messages', JSON.stringify(allMessages.slice(-1000)));
+    } catch {
+      // localStorage lleno — limpiar mensajes viejos y reintentar
+      try {
+        localStorage.setItem('chatapp_messages', JSON.stringify(allMessages.slice(-200)));
+      } catch { /* nada */ }
+    }
+  }, [allMessages, user]);
 
   // Configurar socket y cargar datos iniciales al autenticarse
   useEffect(() => {
