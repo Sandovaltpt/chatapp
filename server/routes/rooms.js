@@ -27,7 +27,7 @@ router.get('/rooms', authMiddleware, async (req, res) => {
 // POST /api/rooms — crear nueva sala
 router.post('/rooms', authMiddleware, async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, emoji } = req.body;
     if (!name?.trim()) {
       return res.status(400).json({ error: 'El nombre de la sala es requerido' });
     }
@@ -44,6 +44,7 @@ router.post('/rooms', authMiddleware, async (req, res) => {
       id: uuidv4(),
       name: name.trim(),
       description: description?.trim() || '',
+      emoji: emoji?.trim() || '💬',
       created_by: req.user.id,
       created_by_name: req.user.name,
       created_at: Date.now(),

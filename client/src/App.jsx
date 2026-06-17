@@ -93,8 +93,9 @@ export default function App() {
         return [...prev, msg];
       });
       // Si el usuario está viendo esa sala ahora mismo, marcarla como leída
+      // Usamos msg.created_at (tiempo servidor) para evitar desfase de reloj cliente/servidor
       if (currentRoomRef.current?.id === msg.room_id) {
-        setReadTimestamps(prev => ({ ...prev, [msg.room_id]: Date.now() }));
+        setReadTimestamps(prev => ({ ...prev, [msg.room_id]: msg.created_at }));
       }
     });
 
@@ -121,11 +122,19 @@ export default function App() {
       .then(data => {
         if (!Array.isArray(data)) return;
         setRooms(data);
-        // Seleccionar sala General automáticamente y marcarla como leída
+        // Seleccionar sala General automáticamente y marcarla como leída (con tiempo servidor)
         const general = data.find(r => r.id === 'general');
         if (general) {
           setCurrentRoom(general);
-          setReadTimestamps(prev => ({ ...prev, [general.id]: Date.now() }));
+          // Marcar usando el último mensaje cacheado (tiempo servidor) o 0 si no hay
+          setAllMessages(prev => {
+            const roomMsgs = prev.filter(m => m.room_id === 'general');
+            const lastTime = roomMsgs.length
+              ? Math.max(...roomMsgs.map(m => m.created_at))
+              : 0;
+            setReadTimestamps(ts => ({ ...ts, ['general']: lastTime }));
+            return prev;
+          });
         }
       })
       .catch(console.error);
@@ -143,10 +152,17 @@ export default function App() {
   }, [token]);
 
   // Al seleccionar una sala: unirse al socket y marcar como leída
+  // Usamos el created_at del último mensaje (tiempo servidor) para evitar desfase de reloj
   const handleSelectRoom = (room) => {
     setCurrentRoom(room);
     socketRef.current?.emit('join_room', room.id);
-    setReadTimestamps(prev => ({ ...prev, [room.id]: Date.now() }));
+    setReadTimestamps(prev => {
+      const roomMsgs = allMessages.filter(m => m.room_id === room.id);
+      const lastTime = roomMsgs.length
+        ? Math.max(...roomMsgs.map(m => m.created_at))
+        : Date.now();
+      return { ...prev, [room.id]: lastTime };
+    });
   };
 
   // Manejador de actualización de salas: también transmite por socket

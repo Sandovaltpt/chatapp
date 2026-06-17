@@ -19,6 +19,13 @@ function CreateRoomModal({ onClose, onCreated }) {
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [emoji, setEmoji] = useState('💬');
+
+  const ROOM_EMOJIS = [
+    '💬','🎮','🎵','📚','🏀','🍕','🌍','💡',
+    '🎨','🔥','🚀','⚽','🎭','💻','🎬','🐶',
+    '🌈','🎤','📸','🏆',
+  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,7 +39,7 @@ function CreateRoomModal({ onClose, onCreated }) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: name.trim(), description: description.trim() }),
+        body: JSON.stringify({ name: name.trim(), description: description.trim(), emoji }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -49,12 +56,44 @@ function CreateRoomModal({ onClose, onCreated }) {
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-card" onClick={e => e.stopPropagation()}>
         <div className="modal-title">
-          <span>🏠</span> Nueva Sala
+          <span>{emoji}</span> Nueva Sala
         </div>
 
         {error && <div className="error-banner" style={{ marginBottom: 14 }}>{error}</div>}
 
         <form className="modal-form" onSubmit={handleSubmit}>
+          {/* Selector de emoji */}
+          <div className="form-group">
+            <label>Icono de la sala</label>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(10, 1fr)',
+              gap: 6,
+              background: 'var(--bg-primary, #0f172a)',
+              borderRadius: 10,
+              padding: 10,
+            }}>
+              {ROOM_EMOJIS.map(e => (
+                <button
+                  key={e}
+                  type="button"
+                  onClick={() => setEmoji(e)}
+                  style={{
+                    fontSize: 22,
+                    background: emoji === e ? 'var(--wa-green, #00a884)' : 'transparent',
+                    border: 'none',
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                    padding: '4px 2px',
+                    transition: 'background 0.15s',
+                  }}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="form-group">
             <label htmlFor="room-name-input">Nombre de la sala</label>
             <input
@@ -225,7 +264,7 @@ export default function Sidebar({ rooms, users, onlineUserIds, messages, current
                   onClick={() => onSelectRoom(room)}
                 >
                   <div className="room-icon">
-                    {getRoomEmoji(room.name)}
+                    {room.emoji || getRoomEmoji(room.name)}
                   </div>
                   <div className="room-info">
                     <div className="room-name"># {room.name}</div>
