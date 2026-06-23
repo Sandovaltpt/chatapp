@@ -75,6 +75,69 @@ io.use((socket, next) => {
 // Registro de usuarios en línea: socketId -> { id, name }
 const onlineUsers = new Map();
 
+// ===========================
+// High or Low — Estado del juego por sala
+// ===========================
+const SUITS = ['♠', '♣', '♥', '♦'];
+const VALUES = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+const GAME_DURATION = 10; // segundos
+
+const gameStates = new Map(); // roomId → game object
+
+function randomCard() {
+  const suit = SUITS[Math.floor(Math.random() * SUITS.length)];
+  const valueIdx = Math.floor(Math.random() * VALUES.length);
+  return { suit, value: VALUES[valueIdx], rank: valueIdx };
+}
+
+async function endGame(roomId) {
+  const game = gameStates.get(roomId);
+  if (!game) return;
+  clearTimeout(game.timer);
+  gameStates.delete(roomId);
+
+  const nextCard = randomCard();
+  const result = nextCard.rank > game.currentCard.rank ? 'higher'
+    : nextCard.rank < game.currentCard.rank ? 'lower'
+    : 'tie';
+
+  const winners = [];
+  const losers = [];
+  game.votes.forEach((vote, userId) => {
+    const name = game.voterNames.get(userId);
+    if (result === 'tie') return;
+    if (vote === result) winners.push(name);
+    else losers.push(name);
+  });
+
+  io.to(roomId).emit('game_result', { nextCard, result, winners, losers, currentCard: game.currentCard });
+
+  // Inyectar mensaje del sistema en el chat
+  const winnersText = winners.length ? `🏆 Ganadores: ${winners.join(', ')}` : '';
+  const losersText = losers.length ? `💀 Perdedores: ${losers.join(', ')}` : '';
+  const tieText = result === 'tie' ? '🤝 ¡Empate! Nadie gana ni pierde.' : '';
+  const systemText = [
+    `🎴 High or Low — Carta actual: ${game.currentCard.value}${game.currentCard.suit} → Siguiente: ${nextCard.value}${nextCard.suit} (${result === 'higher' ? 'HIGHER ⬆️' : result === 'lower' ? 'LOWER ⬇️' : 'EMPATE'})`,
+    winnersText, losersText, tieText
+  ].filter(Boolean).join(' | ');
+
+  await db.read();
+  const systemMsg = {
+    id: uuidv4(),
+    user_id: 'system',
+    user_name: '🎰 Casino',
+    avatar_color: '#f59e0b',
+    type: 'text',
+    content: systemText,
+    file_url: null,
+    room_id: roomId,
+    created_at: Date.now(),
+  };
+  db.data.messages.push(systemMsg);
+  await db.write();
+  io.emit('new_message', systemMsg);
+}
+
 function getOnlineUserIds() {
   return [...new Set([...onlineUsers.values()].map(u => u.id))];
 }
@@ -133,6 +196,46 @@ io.on('connection', (socket) => {
 
   socket.on('room_created', (room) => { io.emit('room_added', room); });
   socket.on('room_deleted', (roomId) => { io.emit('room_removed', roomId); });
+
+  // ===========================
+  // High or Low — Eventos de juego
+  // ===========================
+  socket.on('game_start', (roomId, callback) => {
+    if (gameStates.has(roomId)) {
+      return callback?.({ error: 'Ya hay una partida en curso en esta sala.' });
+    }
+    const card = randomCard();
+    const game = {
+      currentCard: card,
+      votes: new Map(),       // userId → 'higher' | 'lower'
+      voterNames: new Map(),  // userId → name
+      startedBy: user.name,
+      timer: setTimeout(() => endGame(roomId), GAME_DURATION * 1000),
+      startedAt: Date.now(),
+    };
+    gameStates.set(roomId, game);
+    io.to(roomId).emit('game_state', {
+      currentCard: card,
+      startedBy: user.name,
+      duration: GAME_DURATION,
+      startedAt: game.startedAt,
+    });
+    callback?.({ success: true });
+  });
+
+  socket.on('game_vote', ({ roomId, vote }, callback) => {
+    const game = gameStates.get(roomId);
+    if (!game) return callback?.({ error: 'No hay partida activa.' });
+    if (game.votes.has(user.id)) return callback?.({ error: 'Ya votaste.' });
+    if (vote !== 'higher' && vote !== 'lower') return callback?.({ error: 'Voto inválido.' });
+    game.votes.set(user.id, vote);
+    game.voterNames.set(user.id, user.name);
+    // Emitir recuento anónimo de votos
+    const higherCount = [...game.votes.values()].filter(v => v === 'higher').length;
+    const lowerCount = [...game.votes.values()].filter(v => v === 'lower').length;
+    io.to(roomId).emit('game_votes_update', { higherCount, lowerCount });
+    callback?.({ success: true });
+  });
 
   socket.on('disconnect', () => {
     onlineUsers.delete(socket.id);

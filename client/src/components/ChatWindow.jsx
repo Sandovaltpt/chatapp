@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import MessageBubble, { formatDate } from './MessageBubble.jsx';
 import VoiceRecorder from './VoiceRecorder.jsx';
 import ImageUpload from './ImageUpload.jsx';
+import HighOrLow from './HighOrLow.jsx';
 
 function groupMessagesByDate(messages) {
   const groups = [];
@@ -126,6 +127,9 @@ export default function ChatWindow({ currentRoom, onlineUserIds, users, allMessa
     <div className="chat-area">
       <div className="chat-bg" />
 
+      {/* Minijuego High or Low (overlay sobre el chat) */}
+      <HighOrLow socket={socketRef?.current} currentRoom={currentRoom} />
+
       {/* Encabezado */}
       <div className="chat-header">
         <div style={{
@@ -186,6 +190,7 @@ export default function ChatWindow({ currentRoom, onlineUserIds, users, allMessa
       <div className="input-area">
         <div className="input-bar">
           <ImageUpload onUploaded={handleImageUploaded} disabled={sending} />
+          <div id="hol-btn-slot" />
           <textarea
             ref={textareaRef}
             id="message-input"
